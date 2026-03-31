@@ -1,10 +1,10 @@
-'use server';
+"use server";
 
-import { DatabaseError, safeQuery } from '../db';
+import { DatabaseError, safeQuery } from "../db";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type IdType = 'national-id' | 'personal-no';
+type IdType = "national-id" | "personal-no";
 
 interface RegisteredUser {
   UserId: string;
@@ -39,14 +39,16 @@ const otpStore = new Map<
 // TODO: remove DEMO_OTP in production and switch to generateOtp() below.
 
 /** Fixed OTP used during development/testing only. Remove before going live. */
-const DEMO_OTP = '123456';
+const DEMO_OTP = "123456";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Mask all but the last 3 digits of a phone number. */
 function maskPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '');
-  const prefix = digits.slice(0, Math.max(0, digits.length - 3)).replace(/\d/g, '*');
+  const digits = phone.replace(/\D/g, "");
+  const prefix = digits
+    .slice(0, Math.max(0, digits.length - 3))
+    .replace(/\d/g, "*");
   const suffix = digits.slice(-3);
   return `+${prefix}${suffix}`;
 }
@@ -65,7 +67,7 @@ function maskPhone(phone: string): string {
 function generateSessionToken(): string {
   const array = new Uint8Array(24);
   crypto.getRandomValues(array);
-  return Buffer.from(array).toString('hex');
+  return Buffer.from(array).toString("hex");
 }
 
 /**
@@ -99,11 +101,11 @@ export async function lookupUserAndSendOtp(
 ): Promise<LookupResult | ActionError> {
   try {
     // Convert DD/MM/YYYY → YYYY-MM-DD for SQL DATE comparison
-    const [day, month, year] = dob.split('/');
+    const [day, month, year] = dob.split("/");
     const isoDate = `${year}-${month}-${day}`;
 
     const idColumn =
-      idType === 'national-id' ? 'u.NationalIdNumber' : 'u.PersonalNumber';
+      idType === "national-id" ? "u.NationalIdNumber" : "u.PersonalNumber";
 
     const sql = `
       SELECT TOP 1
@@ -121,7 +123,7 @@ export async function lookupUserAndSendOtp(
       return {
         success: false,
         error:
-          'We could not find an account matching those details. Please check your information and try again.',
+          "We could not find an account matching those details. Please check your information and try again.",
       };
     }
 
@@ -156,11 +158,11 @@ export async function lookupUserAndSendOtp(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        error: 'We are experiencing a technical issue. Please try again later.',
+        error: "We are experiencing a technical issue. Please try again later.",
       };
     }
-    console.error('lookupUserAndSendOtp failed:', error);
-    return { success: false, error: 'An unexpected error occurred.' };
+    console.error("lookupUserAndSendOtp failed:", error);
+    return { success: false, error: "An unexpected error occurred." };
   }
 }
 
@@ -178,7 +180,7 @@ export async function resendOtp(
   try {
     const stored = otpStore.get(sessionToken);
     if (!stored) {
-      return { success: false, error: 'Session expired. Please start again.' };
+      return { success: false, error: "Session expired. Please start again." };
     }
 
     // Re-fetch phone number from DB
@@ -187,10 +189,12 @@ export async function resendOtp(
       FROM [User] u
       WHERE u.UserId = @p1`;
 
-    const { rows } = await safeQuery<{ PhoneNumber: string }>(sql, [stored.userId]);
+    const { rows } = await safeQuery<{ PhoneNumber: string }>(sql, [
+      stored.userId,
+    ]);
 
     if (!rows[0]) {
-      return { success: false, error: 'User not found.' };
+      return { success: false, error: "User not found." };
     }
 
     // Refresh with demo OTP and reset expiry
@@ -215,11 +219,11 @@ export async function resendOtp(
     if (error instanceof DatabaseError) {
       return {
         success: false,
-        error: 'We are experiencing a technical issue. Please try again later.',
+        error: "We are experiencing a technical issue. Please try again later.",
       };
     }
-    console.error('resendOtp failed:', error);
-    return { success: false, error: 'An unexpected error occurred.' };
+    console.error("resendOtp failed:", error);
+    return { success: false, error: "An unexpected error occurred." };
   }
 }
 
@@ -237,7 +241,7 @@ export async function verifyOtp(
     if (!stored) {
       return {
         success: false,
-        error: 'Session expired or not found. Please start again.',
+        error: "Session expired or not found. Please start again.",
       };
     }
 
@@ -245,12 +249,12 @@ export async function verifyOtp(
       otpStore.delete(sessionToken);
       return {
         success: false,
-        error: 'Your OTP has expired. Please request a new one.',
+        error: "Your OTP has expired. Please request a new one.",
       };
     }
 
     if (otp.trim() !== stored.otp) {
-      return { success: false, error: 'Invalid OTP. Please try again.' };
+      return { success: false, error: "Invalid OTP. Please try again." };
     }
 
     // OTP is valid – clean up the store
@@ -263,12 +267,82 @@ export async function verifyOtp(
       WHERE UserId = @p1`;
 
     await safeQuery(updateSql, [stored.userId]).catch((err) =>
-      console.error('Failed to update LastLoginAt:', err),
+      console.error("Failed to update LastLoginAt:", err),
     );
 
-    return { success: true, redirectPath: '/projects' };
+    return { success: true, redirectPath: "/project" };
   } catch (error) {
-    console.error('verifyOtp failed:', error);
-    return { success: false, error: 'An unexpected error occurred.' };
+    console.error("verifyOtp failed:", error);
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+// Add this new export alongside your existing verifyOtp function.
+// verifyOtp still works for non-Next-Auth flows if you need it,
+// but the register page will now call signIn() instead.
+
+interface VerifyOtpForAuthResult {
+  success: true;
+  userId: string;
+  email?: string;
+}
+
+export async function verifyOtpForAuth(
+  sessionToken: string,
+  otp: string,
+): Promise<VerifyOtpForAuthResult | ActionError> {
+  try {
+    const stored = otpStore.get(sessionToken);
+
+    if (!stored) {
+      return {
+        success: false,
+        error: "Session expired or not found. Please start again.",
+      };
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      otpStore.delete(sessionToken);
+      return {
+        success: false,
+        error: "Your OTP has expired. Please request a new one.",
+      };
+    }
+
+    if (otp.trim() !== stored.otp) {
+      return { success: false, error: "Invalid OTP. Please try again." };
+    }
+
+    otpStore.delete(sessionToken);
+
+    // Fetch user details for the session
+    const sql = `
+      SELECT TOP 1
+        u.UserId,
+        u.Email
+      FROM [User] u
+      WHERE u.UserId = @p1
+    `;
+    const { rows } = await safeQuery<{
+      UserId: string;
+      FullName: string;
+      Email: string;
+    }>(sql, [stored.userId]);
+
+    // Stamp last login (non-fatal)
+    safeQuery(
+      `UPDATE [User] SET LastLoginAt = GETUTCDATE() WHERE UserId = @p1`,
+      [stored.userId],
+    ).catch((err) => console.error("Failed to update LastLoginAt:", err));
+
+    return {
+      success: true,
+      userId: stored.userId,
+      fullName: rows[0]?.FullName,
+      email: rows[0]?.Email,
+    };
+  } catch (error) {
+    console.error("verifyOtpForAuth failed:", error);
+    return { success: false, error: "An unexpected error occurred." };
   }
 }

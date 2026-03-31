@@ -1,27 +1,31 @@
-'use client';
+"use client";
 
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { lookupUserAndSendOtp, resendOtp, verifyOtp } from '../lib/actions/registerActions';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import {
+  lookupUserAndSendOtp,
+  resendOtp,
+  verifyOtp,
+} from "../lib/actions/registerActions";
+import { signIn } from "next-auth/react";
+import { loginWithOtp } from "../lib/actions/authActions";
 
-
-
-type Step = 'enter-id' | 'verify-otp';
+type Step = "enter-id" | "verify-otp";
 
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [step, setStep] = useState<Step>('enter-id');
-  const [idType, setIdType] = useState<'national-id' | 'personal-no'>('national-id');
-  const [idNumber, setIdNumber] = useState('');
-  const [dob, setDob] = useState('');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<Step>("enter-id");
+  const [idType, setIdType] = useState<"national-id" | "personal-no">(
+    "national-id",
+  );
+  const [idNumber, setIdNumber] = useState("");
+  const [dob, setDob] = useState("");
+  const [otp, setOtp] = useState("");
 
   // Returned from the server after a successful lookup
-  const [sessionToken, setSessionToken] = useState('');
-  const [maskedPhone, setMaskedPhone] = useState('');
+  const [sessionToken, setSessionToken] = useState("");
+  const [maskedPhone, setMaskedPhone] = useState("");
 
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -31,9 +35,9 @@ export default function RegisterPage() {
   // ── DOB input formatting ──────────────────────────────────────────────────
 
   const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length >= 2) value = value.slice(0, 2) + '/' + value.slice(2);
-    if (value.length >= 5) value = value.slice(0, 5) + '/' + value.slice(5, 9);
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length >= 2) value = value.slice(0, 2) + "/" + value.slice(2);
+    if (value.length >= 5) value = value.slice(0, 5) + "/" + value.slice(5, 9);
     if (value.length <= 10) setDob(value);
   };
 
@@ -41,10 +45,12 @@ export default function RegisterPage() {
     /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(dobString);
 
   const parseDob = (dobString: string): Date | null => {
-    const [d, m, y] = dobString.split('/').map(Number);
+    const [d, m, y] = dobString.split("/").map(Number);
     if (!d || !m || !y) return null;
     const date = new Date(y, m - 1, d);
-    return date.getDate() === d && date.getMonth() === m - 1 && date.getFullYear() === y
+    return date.getDate() === d &&
+      date.getMonth() === m - 1 &&
+      date.getFullYear() === y
       ? date
       : null;
   };
@@ -56,23 +62,40 @@ export default function RegisterPage() {
     setError(null);
     setInfo(null);
 
-    if (!idNumber.trim()) { setError('Please enter your ID or personal number.'); return; }
-    if (!dob.trim())       { setError('Please enter your date of birth.'); return; }
+    if (!idNumber.trim()) {
+      setError("Please enter your ID or personal number.");
+      return;
+    }
+    if (!dob.trim()) {
+      setError("Please enter your date of birth.");
+      return;
+    }
     if (!validateDob(dob)) {
-      setError('Please enter a valid date of birth in DD/MM/YYYY format (e.g., 15/03/1990).');
+      setError(
+        "Please enter a valid date of birth in DD/MM/YYYY format (e.g., 15/03/1990).",
+      );
       return;
     }
 
     const dobDate = parseDob(dob);
-    if (!dobDate) { setError('Please enter a valid date of birth.'); return; }
-    if (dobDate > new Date()) { setError('Date of birth cannot be in the future.'); return; }
+    if (!dobDate) {
+      setError("Please enter a valid date of birth.");
+      return;
+    }
+    if (dobDate > new Date()) {
+      setError("Date of birth cannot be in the future.");
+      return;
+    }
 
     // Age check
     const today = new Date();
     let age = today.getFullYear() - dobDate.getFullYear();
     const m = today.getMonth() - dobDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) age--;
-    if (age < 18) { setError('You must be at least 18 years old to register.'); return; }
+    if (age < 18) {
+      setError("You must be at least 18 years old to register.");
+      return;
+    }
 
     setIsSending(true);
     try {
@@ -85,7 +108,7 @@ export default function RegisterPage() {
 
       setSessionToken(result.sessionToken);
       setMaskedPhone(result.maskedPhone);
-      setStep('verify-otp');
+      setStep("verify-otp");
       setInfo(`A one-time password has been sent to ${result.maskedPhone}.`);
     } finally {
       setIsSending(false);
@@ -98,18 +121,21 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (!otp.trim()) { setError('Please enter the OTP sent to your phone.'); return; }
+    if (!otp.trim()) {
+      setError("Please enter the OTP");
+      return;
+    }
 
     setIsVerifying(true);
     try {
-      const result = await verifyOtp(sessionToken, otp);
+      const result = await loginWithOtp(sessionToken, otp);
 
       if (!result.success) {
-        setError(result.error);
+        setError(result.error ?? "");
         return;
       }
 
-      router.push(result.redirectPath);
+      router.push("/projects");
     } finally {
       setIsVerifying(false);
     }
@@ -120,7 +146,7 @@ export default function RegisterPage() {
   const handleResendOtp = async () => {
     setError(null);
     setInfo(null);
-    setOtp('');
+    setOtp("");
 
     const result = await resendOtp(sessionToken);
 
@@ -136,19 +162,20 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
-
       <main className="flex-1 py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Get Started</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+                Get Started
+              </h1>
               <p className="text-gray-700 text-center mb-6">
-                Enter your details to receive a one-time password (OTP) on your registered phone number.
+                Enter your details to receive a one-time password (OTP) on your
+                registered phone number.
               </p>
 
               {/* ── Step 1: Enter ID + DOB ── */}
-              {step === 'enter-id' && (
+              {step === "enter-id" && (
                 <form className="space-y-6" onSubmit={handleSendOtp}>
                   {/* ID Type */}
                   <div>
@@ -156,18 +183,20 @@ export default function RegisterPage() {
                       Select Identification Type
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {(['national-id', 'personal-no'] as const).map((type) => (
+                      {(["national-id", "personal-no"] as const).map((type) => (
                         <button
                           key={type}
                           type="button"
                           onClick={() => setIdType(type)}
                           className={`rounded-lg border px-4 py-3 text-sm font-medium text-left transition-colors ${
                             idType === type
-                              ? 'border-[#16a34a] bg-[#e5f9ed] text-[#166534]'
-                              : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                              ? "border-[#16a34a] bg-[#e5f9ed] text-[#166534]"
+                              : "border-gray-200 hover:bg-gray-50 text-gray-700"
                           }`}
                         >
-                          {type === 'national-id' ? 'National ID Number' : 'Personal Number'}
+                          {type === "national-id"
+                            ? "National ID Number"
+                            : "Personal Number"}
                         </button>
                       ))}
                     </div>
@@ -175,8 +204,13 @@ export default function RegisterPage() {
 
                   {/* ID / Personal Number */}
                   <div>
-                    <label htmlFor="idNumber" className="block text-sm font-medium text-gray-900 mb-2">
-                      {idType === 'national-id' ? 'National ID Number' : 'Personal Number'}
+                    <label
+                      htmlFor="idNumber"
+                      className="block text-sm font-medium text-gray-900 mb-2"
+                    >
+                      {idType === "national-id"
+                        ? "National ID Number"
+                        : "Personal Number"}
                     </label>
                     <input
                       type="text"
@@ -184,14 +218,21 @@ export default function RegisterPage() {
                       value={idNumber}
                       onChange={(e) => setIdNumber(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a34a] focus:border-transparent"
-                      placeholder={idType === 'national-id' ? 'Enter your ID number' : 'Enter your personal number'}
+                      placeholder={
+                        idType === "national-id"
+                          ? "Enter your ID number"
+                          : "Enter your personal number"
+                      }
                       required
                     />
                   </div>
 
                   {/* Date of Birth */}
                   <div>
-                    <label htmlFor="dob" className="block text-sm font-medium text-gray-900 mb-2">
+                    <label
+                      htmlFor="dob"
+                      className="block text-sm font-medium text-gray-900 mb-2"
+                    >
                       Date of Birth <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -205,7 +246,8 @@ export default function RegisterPage() {
                       required
                     />
                     <p className="mt-1 text-xs text-gray-500">
-                      Format: DD/MM/YYYY (e.g., 15/03/1990). Must match your registered date of birth.
+                      Format: DD/MM/YYYY (e.g., 15/03/1990). Must match your
+                      registered date of birth.
                     </p>
                   </div>
 
@@ -217,7 +259,7 @@ export default function RegisterPage() {
                     disabled={isSending}
                     className="w-full px-6 py-3 bg-[#16a34a] text-white rounded-lg hover:bg-[#166534] transition-colors font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSending ? 'Sending OTP…' : 'Send OTP'}
+                    {isSending ? "Sending OTP…" : "Send OTP"}
                   </button>
 
                   {/* Security notice */}
@@ -225,10 +267,13 @@ export default function RegisterPage() {
                     <div className="flex items-start gap-3">
                       <LockIcon />
                       <div className="text-sm text-blue-800">
-                        <p className="font-medium mb-1">Two-Factor Authentication</p>
+                        <p className="font-medium mb-1">
+                          Two-Factor Authentication
+                        </p>
                         <p className="text-xs text-blue-700">
-                          For your security, we verify your identity using both your date of birth and a
-                          one-time password sent to your registered phone number.
+                          For your security, we verify your identity using both
+                          your date of birth and a one-time password sent to
+                          your registered phone number.
                         </p>
                       </div>
                     </div>
@@ -237,16 +282,32 @@ export default function RegisterPage() {
               )}
 
               {/* ── Step 2: Verify OTP ── */}
-              {step === 'verify-otp' && (
+              {step === "verify-otp" && (
                 <form className="space-y-6" onSubmit={handleVerifyOtp}>
                   {/* Summary */}
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900 mb-2">Verification Details:</p>
+                    <p className="text-sm font-medium text-gray-900 mb-2">
+                      Verification Details:
+                    </p>
                     <div className="space-y-1 text-sm text-gray-700">
-                      <p><span className="font-medium">ID Type:</span> {idType === 'national-id' ? 'National ID' : 'Personal Number'}</p>
-                      <p><span className="font-medium">ID Number:</span> {idNumber}</p>
-                      <p><span className="font-medium">Date of Birth:</span> {dob}</p>
-                      <p><span className="font-medium">OTP sent to:</span> {maskedPhone}</p>
+                      <p>
+                        <span className="font-medium">ID Type:</span>{" "}
+                        {idType === "national-id"
+                          ? "National ID"
+                          : "Personal Number"}
+                      </p>
+                      <p>
+                        <span className="font-medium">ID Number:</span>{" "}
+                        {idNumber}
+                      </p>
+                      <p>
+                        <span className="font-medium">Date of Birth:</span>{" "}
+                        {dob}
+                      </p>
+                      <p>
+                        <span className="font-medium">OTP sent to:</span>{" "}
+                        {maskedPhone}
+                      </p>
                     </div>
                   </div>
 
@@ -254,21 +315,28 @@ export default function RegisterPage() {
                     <p className="text-sm text-gray-700 mb-2">
                       We have sent a one-time password to {maskedPhone}.
                     </p>
-                    <label htmlFor="otp" className="block text-sm font-medium text-gray-900 mb-2">
+                    <label
+                      htmlFor="otp"
+                      className="block text-sm font-medium text-gray-900 mb-2"
+                    >
                       Enter OTP <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       id="otp"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      onChange={(e) =>
+                        setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#16a34a] focus:border-transparent tracking-[0.3em] text-center text-lg font-semibold"
                       placeholder="••••••"
                       maxLength={6}
                       inputMode="numeric"
                       required
                     />
-                    <p className="mt-1 text-xs text-gray-500">Check your phone for the 6-digit code</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Check your phone for the 6-digit code
+                    </p>
                   </div>
 
                   <ErrorBanner message={error} />
@@ -279,17 +347,17 @@ export default function RegisterPage() {
                     disabled={isVerifying}
                     className="w-full px-6 py-3 bg-[#16a34a] text-white rounded-lg hover:bg-[#166534] transition-colors font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isVerifying ? 'Verifying…' : 'Verify & Login'}
+                    {isVerifying ? "Verifying…" : "Verify & Login"}
                   </button>
 
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="button"
                       onClick={() => {
-                        setStep('enter-id');
-                        setOtp('');
-                        setSessionToken('');
-                        setMaskedPhone('');
+                        setStep("enter-id");
+                        setOtp("");
+                        setSessionToken("");
+                        setMaskedPhone("");
                         setInfo(null);
                         setError(null);
                       }}
@@ -308,11 +376,15 @@ export default function RegisterPage() {
 
                   <div className="text-center">
                     <p className="text-xs text-gray-500">
-                      Didn&apos;t receive the code?{' '}
+                      Didn&apos;t receive the code?{" "}
                       <button
                         type="button"
                         className="text-[#16a34a] hover:text-[#166534] font-medium"
-                        onClick={() => setInfo('Please check your phone or contact support if the issue persists.')}
+                        onClick={() =>
+                          setInfo(
+                            "Please check your phone or contact support if the issue persists.",
+                          )
+                        }
                       >
                         Get help
                       </button>
@@ -324,8 +396,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }
@@ -354,24 +424,54 @@ function InfoBanner({ message }: { message: string | null }) {
 
 function AlertIcon() {
   return (
-    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg
+      className="w-5 h-5 flex-shrink-0 mt-0.5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   );
 }
 
 function InfoIcon() {
   return (
-    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg
+      className="w-5 h-5 flex-shrink-0 mt-0.5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   );
 }
 
 function LockIcon() {
   return (
-    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    <svg
+      className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+      />
     </svg>
   );
 }
