@@ -135,7 +135,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/projects");
+      router.push(`/login?dob=${dob}`);
     } finally {
       setIsVerifying(false);
     }

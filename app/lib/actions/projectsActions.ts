@@ -110,7 +110,7 @@ export async function getProjectById(
     // 5. Fetch payment plans
     const paymentPlansSql = `
       SELECT
-        plan,
+        [plan],
         discount,
         description
       FROM PaymentPlan

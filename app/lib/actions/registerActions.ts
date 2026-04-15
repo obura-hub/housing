@@ -105,18 +105,20 @@ export async function lookupUserAndSendOtp(
     const isoDate = `${year}-${month}-${day}`;
 
     const idColumn =
-      idType === "national-id" ? "u.NationalIdNumber" : "u.PersonalNumber";
+      idType === "national-id" ? "u.nationalId" : "u.personalNumber";
 
     const sql = `
       SELECT TOP 1
         u.UserId,
-        u.PhoneNumber
+        u.phone
       FROM [User] u
       WHERE ${idColumn}                 = @p1
-        AND CAST(u.DateOfBirth AS DATE) = @p2
+        AND CAST(u.dob AS DATE) = @p2
         AND u.Status                    = 'active'`;
 
     const { rows } = await safeQuery<RegisteredUser>(sql, [idNumber, isoDate]);
+
+    console.log("user", rows[0]);
 
     if (!rows[0]) {
       // Generic message – do not reveal whether the ID or the DOB was wrong
@@ -127,7 +129,7 @@ export async function lookupUserAndSendOtp(
       };
     }
 
-    const { UserId: userId, PhoneNumber: phoneNumber } = rows[0];
+    const { UserId: userId, phone: phoneNumber } = rows[0];
 
     // Use the fixed demo OTP for testing
     // TODO: replace with → const otp = generateOtp();

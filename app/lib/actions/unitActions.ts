@@ -103,8 +103,9 @@ export async function getUnitDetails(
         (SELECT TOP 1 pi.image_url FROM ProjectImage pi WHERE pi.project_id = p.id ORDER BY pi.display_order) AS coverImage
       FROM Unit u
       JOIN Floor f ON u.floor_id = f.id
-      JOIN Project p ON f.project_id = p.id
-      JOIN UnitType ut ON f.unit_type_id = ut.id
+      JOIN Block b ON f.block_id = b.id
+      JOIN Project p ON b.project_id = p.id
+      JOIN UnitType ut ON u.unit_type_id = ut.id
       WHERE u.id = @p1
     `;
     const { rows } = await safeQuery<any>(sql, [unitId]);

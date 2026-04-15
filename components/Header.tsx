@@ -67,7 +67,7 @@ export default async function Header() {
               </div>
             ) : (
               <Link
-                href="/register"
+                href="/login"
                 className="px-4 py-2 bg-[#15B76C] text-white rounded-lg hover:bg-[#0F854E] transition-colors font-semibold"
               >
                 Login
