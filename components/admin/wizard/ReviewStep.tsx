@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -69,6 +70,48 @@ export default function ReviewStep({
           )}
         </CardContent>
       </Card>
+
+      {/* Amenities */}
+      {projectData.amenities && projectData.amenities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Amenities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {projectData.amenities.map((item: string, idx: number) => (
+                <Badge key={idx} variant="secondary">
+                  {item}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payment Plans */}
+      {projectData.paymentPlans && projectData.paymentPlans.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Plans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {projectData.paymentPlans.map((plan: any, idx: number) => (
+                <div key={idx} className="border-b pb-2">
+                  <p className="font-semibold">{plan.plan}</p>
+                  {plan.discount && (
+                    <p className="text-sm text-primary">{plan.discount}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

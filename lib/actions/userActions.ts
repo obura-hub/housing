@@ -224,3 +224,124 @@ export async function getUserByIdentifier(
     return null;
   }
 }
+
+export async function getUserStats(userId: string) {
+  const sql = `
+    SELECT
+      COUNT(*) AS totalBookings,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pendingBookings,
+      SUM(CASE WHEN status IN ('confirmed', 'active') THEN 1 ELSE 0 END) AS activeBookings,
+      ISNULL(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) AS totalPaid,
+      ISNULL(SUM(CASE WHEN status IN ('pending', 'confirmed') THEN amount ELSE 0 END), 0) AS outstanding
+    FROM Booking
+    WHERE user_id = @p1
+  `;
+  const { rows } = await safeQuery(sql, [userId]);
+  return (
+    rows[0] || {
+      totalBookings: 0,
+      pendingBookings: 0,
+      activeBookings: 0,
+      totalPaid: 0,
+      outstanding: 0,
+    }
+  );
+}
+
+export async function getRecentBookings(userId: string, limit: number = 5) {
+  const sql = `
+    SELECT TOP ${limit}
+      b.id,
+      b.created_at AS createdAt,
+      b.status,
+      p.name AS projectName,
+      ut.type AS unitType,
+      u.unit_number AS unitNumber
+    FROM Booking b
+    JOIN Project p ON b.project_id = p.id
+    LEFT JOIN Unit u ON b.unit_id = u.id
+    LEFT JOIN UnitType ut ON u.unit_type_id = ut.id
+    WHERE b.user_id = @p1
+    ORDER BY b.created_at DESC
+  `;
+  const { rows } = await safeQuery(sql, [userId]);
+  return rows;
+}
+
+export async function getUserBookings(userId: string) {
+  const sql = `
+    SELECT
+      b.id,
+      b.created_at AS createdAt,
+      b.status,
+      p.name AS projectName,
+      p.location,
+      ut.type AS unitType,
+      u.unit_number AS unitNumber,
+      b.preferred_move_in_date AS moveInDate
+    FROM Booking b
+    JOIN Project p ON b.project_id = p.id
+    LEFT JOIN Unit u ON b.unit_id = u.id
+    LEFT JOIN UnitType ut ON u.unit_type_id = ut.id
+    WHERE b.user_id = @p1
+    ORDER BY b.created_at DESC
+  `;
+  const { rows } = await safeQuery(sql, [userId]);
+  return rows;
+}
+
+export async function getUserPayments(userId: string) {
+  const sql = `
+    SELECT
+      id,
+      amount,
+      status,
+      payment_method AS method,
+      created_at AS createdAt,
+      reference
+    FROM Payment
+    WHERE user_id = @p1
+    ORDER BY created_at DESC
+  `;
+  const { rows } = await safeQuery(sql, [userId]);
+  return rows;
+}
+
+async function getDbUserId(): Promise<string> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Unauthorized");
+  const sql = `SELECT UserId FROM [User] WHERE email = @p1`;
+  const { rows } = await safeQuery(sql, [session.user.email]);
+  if (rows.length === 0) throw new Error("User not found");
+  return rows[0].UserId;
+}
+
+export async function getUserProfile() {
+  const userId = await getDbUserId();
+  const sql = `
+    SELECT fullName, email, phone, nationalId, personalNumber, dob
+    FROM [User]
+    WHERE UserId = @p1
+  `;
+  const { rows } = await safeQuery(sql, [userId]);
+  if (rows.length === 0) throw new Error("User not found");
+  return rows[0];
+}
+
+export async function updateUserProfile(formData: FormData) {
+  const userId = await getDbUserId();
+  const fullName = formData.get("fullName") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+
+  if (!fullName || !email) throw new Error("Name and email are required");
+
+  const sql = `
+    UPDATE [User]
+    SET fullName = @p2, email = @p3, phone = @p4
+    WHERE UserId = @p1
+  `;
+  await safeQuery(sql, [userId, fullName, email, phone]);
+  revalidatePath("/dashboard/profile");
+  return { success: true };
+}

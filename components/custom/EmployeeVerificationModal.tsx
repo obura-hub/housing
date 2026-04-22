@@ -1,3 +1,4 @@
+// components/custom/EmployeeVerificationModal.tsx (Improved spacing)
 "use client";
 
 import { useState } from "react";
@@ -14,12 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertCircle, Info, Lock } from "lucide-react";
+import { AlertCircle, Info, Lock, ShieldCheck } from "lucide-react";
 import {
   lookupUserAndSendOtp,
   resendOtp,
   verifyOtpForAuth,
 } from "@/lib/actions/authorizationActions";
+import { getUserById, getUserByIdentifier } from "@/lib/actions/userActions";
 
 type Step = "enter-id" | "verify-otp";
 type IdType = "national-id" | "personal-no";
@@ -65,7 +67,6 @@ export function EmployeeVerificationModal({
     }
   };
 
-  // Date of birth formatting: DD/MM/YYYY
   const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
     if (value.length >= 2) value = value.slice(0, 2) + "/" + value.slice(2);
@@ -87,7 +88,6 @@ export function EmployeeVerificationModal({
       : null;
   };
 
-  // Step 1: Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -112,7 +112,6 @@ export function EmployeeVerificationModal({
       return;
     }
 
-    // Age check (optional)
     const today = new Date();
     let age = today.getFullYear() - dobDate.getFullYear();
     const m = today.getMonth() - dobDate.getMonth();
@@ -138,7 +137,6 @@ export function EmployeeVerificationModal({
     }
   };
 
-  // Step 2: Verify OTP and either sign in or redirect to registration
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -155,19 +153,14 @@ export function EmployeeVerificationModal({
         return;
       }
 
-      // Success – sign in using NextAuth credentials
-      const signInResult = await signIn("credentials", {
-        userId: result.userId,
-        redirect: false,
-      });
+      const user = await getUserByIdentifier(idNumber);
+      const hasPassword = user?.password;
 
-      if (signInResult?.error) {
-        // If signIn fails (maybe user doesn't have a password or account), redirect to registration
-        router.push(`/register/complete?userId=${result.userId}`);
+      if (!hasPassword) {
+        router.push(`/register/complete?userId=${user?.userId}`);
       } else {
-        // Successfully logged in – close modal and redirect to dashboard/projects
         onOpenChange(false);
-        router.push("/dashboard");
+        router.push("/login");
       }
     } finally {
       setIsLoading(false);
@@ -188,38 +181,47 @@ export function EmployeeVerificationModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Employee Verification</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-md border-t-4 border-t-primary">
+        <DialogHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </div>
+            <DialogTitle className="text-xl">Employee Verification</DialogTitle>
+          </div>
+          <DialogDescription className="text-base leading-relaxed">
             {step === "enter-id"
-              ? "Enter your National ID or Personal Number and Date of Birth to verify your employment."
+              ? "Enter your National ID or Personal Number and Date of Birth to verify your employment with Nairobi City County."
               : "Enter the one-time password sent to your registered phone number."}
           </DialogDescription>
         </DialogHeader>
 
         {step === "enter-id" ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <Label>Identification Type</Label>
+          <form onSubmit={handleSendOtp} className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Identification Type</Label>
               <RadioGroup
                 value={idType}
                 onValueChange={(val) => setIdType(val as IdType)}
-                className="flex gap-4 mt-2"
+                className="flex gap-6 mt-1"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="national-id" id="national-id" />
-                  <Label htmlFor="national-id">National ID</Label>
+                  <Label htmlFor="national-id" className="text-sm">
+                    National ID
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="personal-no" id="personal-no" />
-                  <Label htmlFor="personal-no">Personal Number</Label>
+                  <Label htmlFor="personal-no" className="text-sm">
+                    Personal Number
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            <div>
-              <Label htmlFor="idNumber">
+            <div className="space-y-2">
+              <Label htmlFor="idNumber" className="text-sm font-medium">
                 {idType === "national-id"
                   ? "National ID Number"
                   : "Personal Number"}
@@ -232,11 +234,14 @@ export function EmployeeVerificationModal({
                   idType === "national-id" ? "e.g., 12345678" : "e.g., P12345"
                 }
                 required
+                className="focus:ring-primary h-11"
               />
             </div>
 
-            <div>
-              <Label htmlFor="dob">Date of Birth (DD/MM/YYYY)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="dob" className="text-sm font-medium">
+                Date of Birth (DD/MM/YYYY)
+              </Label>
               <Input
                 id="dob"
                 value={dob}
@@ -244,32 +249,37 @@ export function EmployeeVerificationModal({
                 placeholder="15/03/1990"
                 maxLength={10}
                 required
+                className="h-11"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1.5">
                 Format: DD/MM/YYYY – must match your employment records.
               </p>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-2">
-                <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-3">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
             {info && (
-              <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 rounded-md p-2">
-                <Info className="h-4 w-4 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 rounded-md p-3">
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{info}</span>
               </div>
             )}
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-primary hover:bg-primary/90 h-11 text-base"
+            >
               {isLoading ? "Sending OTP..." : "Send OTP"}
             </Button>
 
-            <div className="bg-muted/50 rounded-md p-3 flex items-start gap-2 text-xs">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              <p className="text-muted-foreground">
+            <div className="bg-muted/50 rounded-md p-4 flex items-start gap-3 text-xs">
+              <Lock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="text-muted-foreground leading-relaxed">
                 For your security, we verify your identity using your date of
                 birth and send a one-time password to your registered phone
                 number.
@@ -277,25 +287,29 @@ export function EmployeeVerificationModal({
             </div>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div className="bg-muted/30 rounded-md p-3 space-y-1 text-sm">
-              <p>
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <div className="bg-muted/30 rounded-md p-4 space-y-2 text-sm">
+              <p className="flex justify-between">
                 <strong>ID Type:</strong>{" "}
-                {idType === "national-id" ? "National ID" : "Personal Number"}
+                <span>
+                  {idType === "national-id" ? "National ID" : "Personal Number"}
+                </span>
               </p>
-              <p>
-                <strong>ID Number:</strong> {idNumber}
+              <p className="flex justify-between">
+                <strong>ID Number:</strong> <span>{idNumber}</span>
               </p>
-              <p>
-                <strong>Date of Birth:</strong> {dob}
+              <p className="flex justify-between">
+                <strong>Date of Birth:</strong> <span>{dob}</span>
               </p>
-              <p>
-                <strong>OTP sent to:</strong> {maskedPhone}
+              <p className="flex justify-between">
+                <strong>OTP sent to:</strong> <span>{maskedPhone}</span>
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="otp">One-Time Password (OTP)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="otp" className="text-sm font-medium">
+                One-Time Password (OTP)
+              </Label>
               <Input
                 id="otp"
                 value={otp}
@@ -304,32 +318,36 @@ export function EmployeeVerificationModal({
                 }
                 placeholder="123456"
                 maxLength={6}
-                className="tracking-[0.3em] text-center text-lg font-mono"
+                className="tracking-[0.3em] text-center text-lg font-mono focus:ring-primary h-12"
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1.5">
                 Check your phone for a 6-digit code.
               </p>
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-2">
-                <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-3">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
             {info && (
-              <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 rounded-md p-2">
-                <Info className="h-4 w-4 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 rounded-md p-3">
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{info}</span>
               </div>
             )}
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-primary hover:bg-primary/90 h-11 text-base"
+            >
               {isLoading ? "Verifying..." : "Verify & Continue"}
             </Button>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -341,7 +359,7 @@ export function EmployeeVerificationModal({
                   setError(null);
                   setInfo(null);
                 }}
-                className="flex-1"
+                className="flex-1 h-10"
               >
                 Change Details
               </Button>
@@ -349,18 +367,18 @@ export function EmployeeVerificationModal({
                 type="button"
                 variant="secondary"
                 onClick={handleResendOtp}
-                className="flex-1"
+                className="flex-1 bg-secondary text-primary hover:bg-secondary/80 h-10"
               >
                 Resend OTP
               </Button>
             </div>
 
-            <div className="text-center">
+            <div className="text-center pt-2">
               <p className="text-xs text-muted-foreground">
                 Didn't receive the code?{" "}
                 <button
                   type="button"
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline font-medium"
                   onClick={() =>
                     setInfo("Please check your phone or contact support.")
                   }

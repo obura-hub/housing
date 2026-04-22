@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/card";
 import { createFullProject } from "@/lib/actions/admin/projectActions";
 import ProjectDetails from "@/components/admin/wizard/ProjectBasicInfo";
+import AmenitiesStep from "@/components/admin/wizard/AmenitiesStep";
+import PaymentPlansStep from "@/components/admin/wizard/PaymentPlansStep";
 import BlocksStep from "@/components/admin/wizard/BlocksManager";
 import FloorsStep from "@/components/admin/wizard/FloorsManager";
 import UnitTypesStep from "@/components/admin/wizard/UnitTypesManager";
@@ -22,7 +24,9 @@ import LayoutStep from "@/components/admin/wizard/LayoutEditor";
 import ReviewStep from "@/components/admin/wizard/ReviewStep";
 
 const steps = [
-  { title: "Project Details", description: "Basic info & hero image" },
+  { title: "Project Details", description: "Basic info & images" },
+  { title: "Amenities", description: "Features & facilities" },
+  { title: "Payment Plans", description: "Flexible payment options" },
   { title: "Blocks", description: "Buildings / towers with images" },
   { title: "Floors", description: "Floor plans & dimensions" },
   { title: "Unit Types", description: "Room configurations & media" },
@@ -44,6 +48,8 @@ export default function NewProjectWizard() {
     contactEmail: "",
     contactPhone: "",
     images: [],
+    amenities: [],
+    paymentPlans: [],
   });
   const [blocks, setBlocks] = useState<any[]>([]);
   const [unitTypes, setUnitTypes] = useState<any[]>([]);
@@ -74,6 +80,22 @@ export default function NewProjectWizard() {
       data={projectData}
       updateData={setProjectData}
       next={next}
+    />,
+    <AmenitiesStep
+      key="amenities"
+      data={projectData.amenities}
+      updateData={(amenities) => setProjectData({ ...projectData, amenities })}
+      next={next}
+      prev={prev}
+    />,
+    <PaymentPlansStep
+      key="paymentPlans"
+      data={projectData.paymentPlans}
+      updateData={(paymentPlans) =>
+        setProjectData({ ...projectData, paymentPlans })
+      }
+      next={next}
+      prev={prev}
     />,
     <BlocksStep
       key="blocks"

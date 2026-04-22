@@ -14,7 +14,7 @@ import { redirect } from "next/navigation";
 export async function getAdminProjects(): Promise<Project[]> {
   const sql = `
     SELECT
-      id, name, location, address, units, price, description,
+      id, name, location, address, description,
       long_description AS longDescription, status, completion_date AS completionDate,
       developer, contact_email AS contactEmail, contact_phone AS contactPhone
     FROM Project
@@ -202,6 +202,33 @@ export async function createFullProject(data: {
           VALUES (@p1, @p2, @p3)
           `,
           [projectId, data.project.images[i], i],
+        );
+      }
+    }
+
+    // Insert amenities
+    if (data.project.amenities && data.project.amenities.length > 0) {
+      for (let i = 0; i < data.project.amenities.length; i++) {
+        await safeQuery(
+          `
+          INSERT INTO Amenity (project_id, amenity_name, sort_order)
+          VALUES (@p1, @p2, @p3)
+          `,
+          [projectId, data.project.amenities[i], i],
+        );
+      }
+    }
+
+    // Insert payment plans
+    if (data.project.paymentPlans && data.project.paymentPlans.length > 0) {
+      for (let i = 0; i < data.project.paymentPlans.length; i++) {
+        const plan = data.project.paymentPlans[i];
+        await safeQuery(
+          `
+          INSERT INTO PaymentPlan (project_id, [plan], discount, description, sort_order)
+          VALUES (@p1, @p2, @p3, @p4, @p5)
+          `,
+          [projectId, plan.plan, plan.discount, plan.description, i],
         );
       }
     }
@@ -492,4 +519,123 @@ export async function getProjectById(
     console.error("Failed to fetch project details:", error);
     throw new Error("Failed to fetch project details");
   }
+}
+
+export async function getProjectImages(projectId: number) {
+  const sql = `
+    SELECT id, image_url AS url, display_order
+    FROM ProjectImage
+    WHERE project_id = @p1
+    ORDER BY display_order
+  `;
+  const { rows } = await safeQuery(sql, [projectId]);
+  return rows;
+}
+
+export async function addProjectImage(projectId: number, imageUrl: string) {
+  // Get current max display_order
+  const maxSql = `SELECT ISNULL(MAX(display_order), -1) AS maxOrder FROM ProjectImage WHERE project_id = @p1`;
+  const { rows } = await safeQuery(maxSql, [projectId]);
+  const newOrder = rows[0].maxOrder + 1;
+
+  const sql = `
+    INSERT INTO ProjectImage (project_id, image_url, display_order)
+    VALUES (@p1, @p2, @p3)
+  `;
+  await safeQuery(sql, [projectId, imageUrl, newOrder]);
+  revalidatePath(`/admin/projects/${projectId}/edit/images`);
+  return { success: true };
+}
+
+export async function deleteProjectImage(imageId: number) {
+  const sql = `DELETE FROM ProjectImage WHERE id = @p1`;
+  await safeQuery(sql, [imageId]);
+  revalidatePath(`/admin/projects/*`);
+  return { success: true };
+}
+
+export async function reorderProjectImages(
+  projectId: number,
+  imageIds: number[],
+) {
+  for (let i = 0; i < imageIds.length; i++) {
+    const sql = `UPDATE ProjectImage SET display_order = @p1 WHERE id = @p2 AND project_id = @p3`;
+    await safeQuery(sql, [i, imageIds[i], projectId]);
+  }
+  revalidatePath(`/admin/projects/${projectId}/edit/images`);
+  return { success: true };
+}
+
+export async function updateProjectDetails(
+  projectId: number,
+  formData: FormData,
+) {
+  const name = formData.get("name") as string;
+  const location = formData.get("location") as string;
+  const address = formData.get("address") as string;
+  const description = formData.get("description") as string;
+  const longDescription = formData.get("longDescription") as string;
+  const status = formData.get("status") as string;
+  const completionDate = formData.get("completionDate") as string;
+  const developer = formData.get("developer") as string;
+  const contactEmail = formData.get("contactEmail") as string;
+  const contactPhone = formData.get("contactPhone") as string;
+  const amenities = JSON.parse((formData.get("amenities") as string) || "[]");
+  const paymentPlans = JSON.parse(
+    (formData.get("paymentPlans") as string) || "[]",
+  );
+
+  // Update project
+  const sql = `
+    UPDATE Project SET
+      name = @p2,
+      location = @p3,
+      address = @p4,
+      description = @p5,
+      long_description = @p6,
+      status = @p7,
+      completion_date = @p8,
+      developer = @p9,
+      contact_email = @p10,
+      contact_phone = @p11
+    WHERE id = @p1
+  `;
+  await safeQuery(sql, [
+    projectId,
+    name,
+    location,
+    address,
+    description,
+    longDescription,
+    status,
+    completionDate,
+    developer,
+    contactEmail,
+    contactPhone,
+  ]);
+
+  // Replace amenities (delete old, insert new)
+  await safeQuery(`DELETE FROM Amenity WHERE project_id = @p1`, [projectId]);
+  for (let i = 0; i < amenities.length; i++) {
+    await safeQuery(
+      `INSERT INTO Amenity (project_id, amenity_name, sort_order) VALUES (@p1, @p2, @p3)`,
+      [projectId, amenities[i], i],
+    );
+  }
+
+  // Replace payment plans
+  await safeQuery(`DELETE FROM PaymentPlan WHERE project_id = @p1`, [
+    projectId,
+  ]);
+  for (let i = 0; i < paymentPlans.length; i++) {
+    const plan = paymentPlans[i];
+    await safeQuery(
+      `INSERT INTO PaymentPlan (project_id, [plan], discount, description, sort_order) VALUES (@p1, @p2, @p3, @p4, @p5)`,
+      [projectId, plan.plan, plan.discount, plan.description, i],
+    );
+  }
+
+  revalidatePath(`/admin/projects/${projectId}`);
+  revalidatePath(`/admin/projects`);
+  return { success: true };
 }

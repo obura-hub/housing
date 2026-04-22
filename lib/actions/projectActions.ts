@@ -139,6 +139,7 @@ export async function getProjectDetails(id: number) {
   // 4. Unit types summary – FIXED (no DISTINCT, include sort_order)
   const unitTypesSql = `
     SELECT
+    ut.id,
       ut.type,
       ut.size,
       ut.price,
@@ -242,6 +243,8 @@ export async function getUnitType(id: number) {
   return rows[0] || null;
 }
 
+// In your projectActions.ts or unitTypeActions.ts
+
 export async function getBlocksForUnitType(
   projectId: number,
   unitTypeId: number,
@@ -253,6 +256,7 @@ export async function getBlocksForUnitType(
       b.description,
       b.image_url AS image,
       b.model_3d_url AS model3d,
+      b.sort_order,
       (SELECT COUNT(DISTINCT f.id) FROM Floor f WHERE f.block_id = b.id) AS floorCount,
       (SELECT COUNT(*) FROM Unit u
        JOIN Floor f ON u.floor_id = f.id
@@ -264,7 +268,8 @@ export async function getBlocksForUnitType(
     ORDER BY b.sort_order
   `;
   const { rows } = await safeQuery(sql, [projectId, unitTypeId]);
-  return rows;
+  // Remove sort_order from returned objects
+  return rows.map(({ sort_order, ...block }) => block);
 }
 
 // floorActions.ts
