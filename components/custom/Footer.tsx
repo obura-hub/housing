@@ -10,6 +10,7 @@ import {
   // Twitter,
   // Linkedin,
 } from "lucide-react";
+import Logo from "./logo";
 
 export function Footer() {
   return (
@@ -18,8 +19,8 @@ export function Footer() {
         <div className="py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-white" />
+              <div className="h-16 w-16 rounded-full  flex items-center justify-center">
+                <Logo />
               </div>
               <h3 className="font-bold text-lg text-primary">
                 Nairobi City County

@@ -60,13 +60,11 @@ export default async function Home() {
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white">
                 Urban Renewal &{" "}
-                <span className="text-secondary drop-shadow-sm">
-                  Affordable Housing
-                </span>
+                <span className="text-secondary drop-shadow-sm">Housing</span>
               </h1>
               <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
                 Your gateway to sustainable home ownership in Nairobi.
-                County-backed, modern, and accessible for all residents.
+                County-backed, modern, and accessible for all county employees.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <VerifyEmployeeButton
@@ -248,8 +246,8 @@ export default async function Home() {
                 Ready to Own Your Dream Home?
               </h2>
               <p className="text-lg text-white/90 mb-8">
-                Join thousands of Nairobi residents who have found their dream
-                home through our county-backed affordable housing program.
+                Join thousands of Nairobi County staffs who have found their
+                dream home through our county-backed affordable housing program.
               </p>
               <VerifyEmployeeButton
                 userId={userId}

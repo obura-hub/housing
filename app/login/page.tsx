@@ -1,55 +1,59 @@
-// app/login/page.tsx (Enhanced)
+// app/login/page.tsx (Simplified)
 import { Suspense } from "react";
 import LoginForm from "@/components/login/LoginForm";
 import { Shield } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import Logo from "@/components/custom/logo";
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-secondary/20">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10 pointer-events-none" />
-
-      {/* Animated shapes */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-secondary/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse delay-1000" />
-
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
-          {/* County Branding */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4 border border-white/30">
-              <Shield className="h-3.5 w-3.5 text-secondary" />
-              <span className="text-xs font-medium text-white">
-                Nairobi City County | Innovation & Digital Economy
-              </span>
-            </div>
-            <div className="flex justify-center mb-3">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">NC</span>
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
-            <p className="text-white/80 text-sm mt-1">
-              Sign in to your account
-            </p>
+    <div className="flex min-h-screen items-center justify-center bg-muted/20 p-4">
+      <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
+        {/* County Branding - Minimal */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 bg-primary/5 rounded-full px-3 py-1 mb-3">
+            <Shield className="h-3 w-3 text-primary" />
+            <span className="text-xs text-muted-foreground">
+              Nairobi City County
+            </span>
           </div>
-
-          {/* Login Card */}
-          <div className="bg-white/95 dark:bg-card/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
-            <div className="p-6 md:p-8">
-              <Suspense
-                fallback={<div className="text-center py-8">Loading...</div>}
-              >
-                <LoginForm />
-              </Suspense>
+          <div className="flex justify-center mb-2">
+            <div className="h-32 w-32 rounded-full bg-primary/10 flex items-center justify-center">
+              <Logo />
             </div>
           </div>
-
-          {/* Footer note */}
-          <p className="text-center text-white/70 text-xs mt-8">
-            Secure login powered by Nairobi City County
+          <h1 className="text-2xl font-bold">Welcome Back</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Sign in to your account
           </p>
         </div>
+
+        {/* Login Card */}
+        <Card className="border-border/50 shadow-lg">
+          <CardHeader className="space-y-1 text-center border-b border-border/50 pb-4">
+            <CardTitle className="text-xl">Sign In</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <Suspense
+              fallback={<div className="text-center py-4">Loading...</div>}
+            >
+              <LoginForm />
+            </Suspense>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-muted-foreground text-xs mt-6">
+          Secure login • Powered by Smart Nairobi
+        </p>
       </div>
     </div>
   );

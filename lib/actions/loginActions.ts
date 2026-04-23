@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 export async function authenticate(_state: unknown, formData: FormData) {
   const identifier = formData.get("identifier") as string;
   const password = formData.get("password") as string;
+  const redirectTo = (formData.get("redirectTo") as string) || "/dashboard";
 
   if (!identifier || !password) {
     return "Both identifier and password are required.";
@@ -48,5 +49,5 @@ export async function authenticate(_state: unknown, formData: FormData) {
     return "An unexpected error occurred.";
   }
 
-  redirect("/dashboard");
+  redirect(redirectTo);
 }

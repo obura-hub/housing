@@ -17,14 +17,8 @@ export function Navbar() {
         <div className="flex h-16 md:h-20 items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-county flex items-center justify-center shadow-md">
-              <Image
-                src="/images/county.png"
-                width={459}
-                height={444}
-                alt="County Logo"
-                className="drop-shadow-lg"
-              />
+            <div className="h-10 w-10 rounded-full flex items-center justify-center shadow-md">
+              <Logo />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl text-primary tracking-tight">
@@ -32,7 +26,7 @@ export function Navbar() {
               </span>
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-secondary"></span>
-                Innovation & Digital Economy
+                Urban Renewal
               </span>
             </div>
           </div>

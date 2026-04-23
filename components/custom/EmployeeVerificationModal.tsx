@@ -157,7 +157,9 @@ export function EmployeeVerificationModal({
       const hasPassword = user?.password;
 
       if (!hasPassword) {
-        router.push(`/register/complete?userId=${user?.userId}`);
+        router.push(
+          `/register/complete?userId=${user?.userId}&email=${user?.email}`,
+        );
       } else {
         onOpenChange(false);
         router.push("/login");
