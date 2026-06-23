@@ -1,0 +1,129 @@
+2026-06-17T12:04:59.293Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMDQ1OQ==",
+  "Timestamp": "20260617120459",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 100,
+  "PartyA": "25478626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "25478626585",
+  "CallBackURL": "https://your-ngrok-url.ngrok.io/api/mpesa/callback",
+  "AccountReference": "NAIROBI CITY COUNTY",
+  "TransactionDesc": "Test Payment"
+}
+2026-06-17T12:04:59.497Z - 📥 Response: {
+  "requestId": "54a8-432e-b302-cf1d90c609dd55271",
+  "errorCode": "400.002.02",
+  "errorMessage": "Bad Request - Invalid PhoneNumber"
+}
+2026-06-17T12:09:23.862Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMDkyMw==",
+  "Timestamp": "20260617120923",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 20001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://your-ngrok-url.ngrok.io/api/mpesa/callback",
+  "AccountReference": "PAY-1781698161357",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:09:24.301Z - 📥 Response: {
+  "requestId": "eb45-43b3-a3d4-218ee9f921eb15822",
+  "errorCode": "500.001.1001",
+  "errorMessage": "Merchant does not exist"
+}
+2026-06-17T12:13:50.511Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMTM1MA==",
+  "Timestamp": "20260617121350",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 10001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://your-ngrok-url.ngrok.io/api/mpesa/callback",
+  "AccountReference": "PAY-1781698428826",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:13:50.841Z - 📥 Response: {
+  "requestId": "54a8-432e-b302-cf1d90c609dd56048",
+  "errorCode": "500.001.1001",
+  "errorMessage": "Merchant does not exist"
+}
+2026-06-17T12:27:30.594Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMjczMA==",
+  "Timestamp": "20260617122730",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 10001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://5dfe-197-248-119-3.ngrok-free.app/api/mpesa/callback",
+  "AccountReference": "PAY-1781699249111",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:27:30.950Z - 📥 Response: {
+  "requestId": "eb45-43b3-a3d4-218ee9f921eb16700",
+  "errorCode": "500.001.1001",
+  "errorMessage": "Merchant does not exist"
+}
+2026-06-17T12:27:34.050Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMjczNA==",
+  "Timestamp": "20260617122734",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 10001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://5dfe-197-248-119-3.ngrok-free.app/api/mpesa/callback",
+  "AccountReference": "PAY-1781699253810",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:27:34.247Z - 📥 Response: {
+  "requestId": "eb45-43b3-a3d4-218ee9f921eb16703",
+  "errorCode": "500.003.02",
+  "errorMessage": "System is busy. Please try again in few minutes."
+}
+2026-06-17T12:27:35.656Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMjczNQ==",
+  "Timestamp": "20260617122735",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 10001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://5dfe-197-248-119-3.ngrok-free.app/api/mpesa/callback",
+  "AccountReference": "PAY-1781699255243",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:27:35.898Z - 📥 Response: {
+  "requestId": "eb45-43b3-a3d4-218ee9f921eb16705",
+  "errorCode": "500.003.02",
+  "errorMessage": "System is busy. Please try again in few minutes."
+}
+2026-06-17T12:27:37.053Z - 📤 Sending STK Push: {
+  "BusinessShortCode": "6201850",
+  "Password": "NjIwMTg1MGJmYjI3OWY5YWE5YmRiY2YxNThlOTdkZDcxYTQ2N2NkMmUwYzg5MzA1OWIxMGY3OGU2YjcyYWRhMWVkMmM5MTkyMDI2MDYxNzEyMjczNw==",
+  "Timestamp": "20260617122737",
+  "TransactionType": "CustomerPayBillOnline",
+  "Amount": 10001,
+  "PartyA": "254798626585",
+  "PartyB": "6201850",
+  "PhoneNumber": "254798626585",
+  "CallBackURL": "https://5dfe-197-248-119-3.ngrok-free.app/api/mpesa/callback",
+  "AccountReference": "PAY-1781699256842",
+  "TransactionDesc": "Payment for reservation"
+}
+2026-06-17T12:27:37.280Z - 📥 Response: {
+  "requestId": "eb45-43b3-a3d4-218ee9f921eb16706",
+  "errorCode": "500.003.02",
+  "errorMessage": "System is busy. Please try again in few minutes."
+}
+2026-06-17T12:27:38.676Z - ❌ Failed to get access token
+2026-06-17T12:30:10.890Z - ❌ Error: fetch failed
+2026-06-17T12:30:30.920Z - ❌ Error: fetch failed
