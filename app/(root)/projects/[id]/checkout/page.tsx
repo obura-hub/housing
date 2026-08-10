@@ -1,20 +1,21 @@
-// app/projects/[id]/checkout/page.tsx (Server Component)
+// app/projects/[id]/checkout/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getCheckoutDetails } from "@/lib/actions/checkoutActions";
 import { CheckoutForm } from "./CheckoutForm";
 import { Container } from "@/components/ui/container";
-import {
-  CheckCircle,
-  Phone,
-  Mail,
-  Shield as ShieldIcon,
-  Shield,
-} from "lucide-react";
+import { CheckCircle, Phone, Mail, Shield, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getUserActiveReservation } from "@/lib/actions/dashboardActions"; // we can import from dashboardActions or create a dedicated one
 
 interface CheckoutPageProps {
   searchParams: Promise<{ unitId: string; unitTypeId: string }>;
@@ -28,6 +29,48 @@ export default async function CheckoutPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  // Check if user already has an active reservation
+  const activeReservation = await getUserActiveReservation();
+  if (activeReservation) {
+    // User already has a reservation - show a message and link to dashboard
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="container max-w-2xl py-10 mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-600">
+                <AlertCircle className="h-6 w-6" />
+                You Already Have an Active Booking
+              </CardTitle>
+              <CardDescription>
+                You can only reserve one unit at a time.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                You already have a reservation for{" "}
+                <strong>{activeReservation.project_name}</strong> (Unit{" "}
+                {activeReservation.unit_number}). Please complete or cancel that
+                reservation before booking another unit.
+              </p>
+              <div className="flex gap-4">
+                <Button asChild>
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href={`/dashboard/bookings/${activeReservation.id}`}>
+                    View My Booking
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Proceed with normal checkout
   const { unitId, unitTypeId } = await searchParams;
   const { id } = await params;
   const projectId = parseInt(id);
@@ -78,10 +121,7 @@ export default async function CheckoutPage({
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Order Summary Card */}
               <OrderSummaryCard unit={unit} />
-
-              {/* Support Card */}
               <SupportCard />
             </div>
           </div>
@@ -91,7 +131,7 @@ export default async function CheckoutPage({
   );
 }
 
-// Step Indicator Components
+// Helper Components
 function StepItem({
   number,
   label,
@@ -132,8 +172,6 @@ function StepItem({
 function StepConnector() {
   return <div className="w-8 md:w-16 h-0.5 bg-muted" />;
 }
-
-// Order Summary Card (Client-side dynamic? But we'll pass unit data)
 
 function OrderSummaryCard({ unit }: { unit: any }) {
   const totalPrice = unit.total_price;
@@ -180,7 +218,6 @@ function OrderSummaryCard({ unit }: { unit: any }) {
   );
 }
 
-// Support Card
 function SupportCard() {
   return (
     <Card className="border-border/50 shadow-md">

@@ -1,4 +1,3 @@
-// app/projects/[id]/checkout/CheckoutForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -63,8 +62,14 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
   const remaining = totalPrice - downPayment;
   const monthlyInstallment = remaining / installmentMonths;
 
+  // Compute deposit amount (10% of total) and deadline (2 days from now)
+  const depositAmount = totalPrice * 0.1;
+  const depositDeadline = new Date();
+  depositDeadline.setDate(depositDeadline.getDate() + 2);
+  const reservationExpiry = new Date();
+  reservationExpiry.setDate(reservationExpiry.getDate() + 7);
+
   const handleConfirmClick = () => {
-    // Open terms modal first
     setShowTermsModal(true);
   };
 
@@ -110,7 +115,7 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Unit Preview Card (unchanged) */}
+          {/* Unit Preview Card */}
           <div className="bg-card rounded-xl border border-border/50 p-4 space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative h-32 w-32 flex-shrink-0 rounded-lg overflow-hidden bg-muted shadow-sm">
@@ -161,12 +166,13 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground border-t pt-3">
-              <Clock className="h-3 w-3" /> Reservation holds this unit for 7
-              days
+              <Clock className="h-3 w-3" />
+              Reservation holds this unit for 7 days (expires{" "}
+              {reservationExpiry.toLocaleDateString()})
             </div>
           </div>
 
-          {/* Payment Plan Selection (unchanged) */}
+          {/* Payment Plan Selection */}
           <div className="space-y-4">
             <Label className="text-base font-semibold">Payment Plan</Label>
             <RadioGroup
@@ -236,7 +242,7 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
             </RadioGroup>
           </div>
 
-          {/* Installment Customization (unchanged) */}
+          {/* Installment Customization */}
           {paymentPlan === "installment" && (
             <div className="space-y-5 p-4 rounded-xl bg-muted/20 border border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
               <h4 className="font-semibold flex items-center gap-2">
@@ -303,6 +309,21 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
             </div>
           )}
 
+          {/* Deposit Notice (always shown) */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+            <p className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>
+                <strong>
+                  Deposit of Ksh {depositAmount.toLocaleString()} (10%)
+                </strong>{" "}
+                must be paid within 2 days (by{" "}
+                {depositDeadline.toLocaleDateString()}) to secure this
+                reservation.
+              </span>
+            </p>
+          </div>
+
           {error && (
             <Alert
               variant="destructive"
@@ -364,7 +385,6 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
               7 days from the date of reservation. During this period, the unit
               will be reserved exclusively for you.
             </p>
-
             <h3 className="font-semibold text-foreground">2. Payment Terms</h3>
             <p>
               You agree to make the required down payment within 7 days of
@@ -372,7 +392,6 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
               reservation. All payments are non-refundable unless otherwise
               specified by Nairobi City County.
             </p>
-
             <h3 className="font-semibold text-foreground">
               3. Installment Plan
             </h3>
@@ -381,7 +400,6 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
               payments as per the schedule. Late payments may incur penalties as
               defined in the full agreement.
             </p>
-
             <h3 className="font-semibold text-foreground">
               4. County Approval
             </h3>
@@ -390,20 +408,17 @@ export function CheckoutForm({ unit, projectId, userId }: CheckoutFormProps) {
               County. The county reserves the right to cancel or modify
               reservations due to administrative or legal reasons.
             </p>
-
             <h3 className="font-semibold text-foreground">5. Data Privacy</h3>
             <p>
               Your personal data will be processed in accordance with the
               county's privacy policy. We do not share your data with third
               parties without your consent.
             </p>
-
             <h3 className="font-semibold text-foreground">6. Governing Law</h3>
             <p>
               These terms are governed by the laws of Kenya. Any disputes shall
               be resolved in Nairobi courts.
             </p>
-
             <div className="bg-muted/30 p-3 rounded-lg mt-4">
               <p className="text-xs">
                 By clicking "I Accept", you confirm that you have read,

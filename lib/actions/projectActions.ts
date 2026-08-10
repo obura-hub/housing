@@ -1,6 +1,6 @@
 import { safeQuery } from "../db";
 
-export async function getFeaturedProjects(limit: number = 3) {
+export async function getFeaturedProjects(limit: number = 4) {
   const sql = `
     SELECT TOP ${limit}
       p.id,
@@ -28,7 +28,11 @@ export async function getAllProjects() {
       (SELECT COUNT(*) FROM Unit u
        INNER JOIN Floor f ON u.floor_id = f.id
        INNER JOIN Block b ON f.block_id = b.id
-       WHERE b.project_id = p.id) AS totalUnits
+       WHERE b.project_id = p.id) AS totalUnits,
+      (SELECT COUNT(*) FROM Unit u
+       INNER JOIN Floor f ON u.floor_id = f.id
+       INNER JOIN Block b ON f.block_id = b.id
+       WHERE b.project_id = p.id AND u.status = 'available') AS availableUnits
     FROM Project p
     ORDER BY p.id DESC
   `;

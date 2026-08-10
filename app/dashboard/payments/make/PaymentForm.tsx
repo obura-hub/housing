@@ -14,19 +14,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CreditCardIcon } from "lucide-react";
 import { processPayment } from "@/lib/actions/paymentActions";
 
 interface PaymentFormProps {
   reservationId: number;
   suggestedAmount: number;
   maxAmount: number;
+  isDepositOverdue: boolean;
 }
 
 export function PaymentForm({
   reservationId,
   suggestedAmount,
   maxAmount,
+  isDepositOverdue,
 }: PaymentFormProps) {
   const router = useRouter();
   const [amount, setAmount] = useState(suggestedAmount.toString());
@@ -70,53 +72,68 @@ export function PaymentForm({
   };
 
   return (
-    <Card>
+    <Card className="border-border/50 shadow-md">
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle>Payment Details</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCardIcon className="h-5 w-5 text-primary" />
+            Payment Details
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="amount">Amount (Ksh)</Label>
+        <CardContent className="space-y-5">
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-base font-medium">
+              Amount (Ksh)
+            </Label>
             <Input
               id="amount"
               type="number"
-              step="100"
+              step="any" // ← fixed: accept any decimal
               min="1"
               max={maxAmount}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              className="text-lg"
               required
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Suggested: Ksh {suggestedAmount.toLocaleString()}. Max: Ksh{" "}
+            <p className="text-xs text-muted-foreground">
+              Suggested: Ksh {suggestedAmount.toLocaleString()} • Max: Ksh{" "}
               {maxAmount.toLocaleString()}
             </p>
           </div>
 
-          <div>
-            <Label>Payment Method</Label>
+          {/* Payment Method */}
+          <div className="space-y-2">
+            <Label className="text-base font-medium">Payment Method</Label>
             <RadioGroup
               value={method}
               onValueChange={setMethod}
-              className="mt-2"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-muted/30 transition-colors">
                 <RadioGroupItem value="mpesa" id="mpesa" />
-                <Label htmlFor="mpesa">M-Pesa</Label>
+                <Label htmlFor="mpesa" className="cursor-pointer font-normal">
+                  M-Pesa
+                </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-muted/30 transition-colors">
                 <RadioGroupItem value="bank" id="bank" />
-                <Label htmlFor="bank">Bank Transfer</Label>
+                <Label htmlFor="bank" className="cursor-pointer font-normal">
+                  Bank Transfer
+                </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border rounded-lg p-3 hover:bg-muted/30 transition-colors">
                 <RadioGroupItem value="cash" id="cash" />
-                <Label htmlFor="cash">Cash (In‑Person)</Label>
+                <Label htmlFor="cash" className="cursor-pointer font-normal">
+                  Cash (In‑Person)
+                </Label>
               </div>
             </RadioGroup>
           </div>
 
-          <div>
+          {/* Reference */}
+          <div className="space-y-2">
             <Label htmlFor="reference">Transaction Reference (optional)</Label>
             <Input
               id="reference"
@@ -126,6 +143,18 @@ export function PaymentForm({
             />
           </div>
 
+          {/* Overdue warning */}
+          {isDepositOverdue && (
+            <Alert variant="destructive" className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <AlertDescription>
+                <strong>Deposit overdue!</strong> Please pay the outstanding
+                deposit immediately to avoid cancellation.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error */}
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -134,8 +163,19 @@ export function PaymentForm({
           )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Processing..." : "Submit Payment"}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-primary hover:bg-primary/90"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                Processing...
+              </>
+            ) : (
+              "Submit Payment"
+            )}
           </Button>
         </CardFooter>
       </form>

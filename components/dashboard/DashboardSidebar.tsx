@@ -18,7 +18,7 @@ import { signOutAction } from "../login/SignOut";
 
 const navItems = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "My Bookings", href: "/dashboard/bookings", icon: Calendar },
+  { name: "My Booking", href: "/dashboard/bookings", icon: Calendar },
   { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
   { name: "Profile", href: "/dashboard/profile", icon: User },
 ];

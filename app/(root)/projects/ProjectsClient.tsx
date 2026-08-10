@@ -36,11 +36,12 @@ interface Project {
   id: number;
   name: string;
   location: string;
-  price: string;
+  price: string; // keep as is (computed elsewhere)
   description: string;
   status: string;
   coverImage: string | null;
   totalUnits: number;
+  availableUnits: number; // ← new field
 }
 
 interface ProjectsClientProps {

@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   Settings,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 const navItems = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Projects", href: "/admin/projects", icon: Building },
+  { name: "Reservations", href: "/admin/reservations", icon: Calendar },
   { name: "Unit Types", href: "/admin/unit-types", icon: Home },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Reports", href: "/admin/reports", icon: FileText },

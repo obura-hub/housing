@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import { getUserDashboardData } from "@/lib/actions/dashboardActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +13,11 @@ import {
   WalletIcon,
   CheckCircleIcon,
   ClockIcon,
+  AlertCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { DepositCountdownTimer } from "@/components/dashboard/DepositCountdownTimer";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -25,36 +26,51 @@ export default async function DashboardPage() {
   const { activeBooking, recentPayments, stats, nextPayment } =
     await getUserDashboardData();
 
+  // Compute progress for active booking
   const paymentProgress = activeBooking
     ? (activeBooking.paid_amount / activeBooking.total_price) * 100
     : 0;
 
+  // Status badge config
   const statusConfig = {
     pending: {
-      label: "Pending",
+      label: "Pending Deposit",
       color: "bg-amber-100 text-amber-800 border-amber-200",
+      icon: ClockIcon,
     },
     confirmed: {
       label: "Confirmed",
       color: "bg-blue-100 text-blue-800 border-blue-200",
+      icon: CheckCircleIcon,
     },
     paying: {
       label: "In Progress",
       color: "bg-purple-100 text-purple-800 border-purple-200",
+      icon: TrendingUpIcon,
     },
     completed: {
       label: "Completed",
       color: "bg-green-100 text-green-800 border-green-200",
+      icon: CheckCircleIcon,
     },
     owned: {
       label: "Owned",
       color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      icon: HomeIcon,
     },
   };
   const status = statusConfig[activeBooking?.status] || {
-    label: activeBooking?.status || "Unknown",
-    color: "bg-gray-100",
+    label: activeBooking?.status || "Pending",
+    color: "bg-amber-100 text-amber-800 border-amber-200",
+    icon: ClockIcon,
   };
+  const StatusIcon = status.icon;
+
+  // Determine if deposit is overdue (pending and past 2 days) – still used for fallback
+  const isDepositOverdue =
+    activeBooking?.status === "pending" &&
+    new Date(activeBooking.reserved_at).getTime() + 2 * 24 * 60 * 60 * 1000 <
+      Date.now();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -95,6 +111,7 @@ export default async function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-5 md:grid-cols-3">
+        {/* Total Paid */}
         <Card className="border-border/50 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex justify-between">
@@ -104,14 +121,21 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              Ksh {stats.total_paid.toLocaleString()}
+              Ksh {stats.totalPaid.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            {activeBooking && stats.activeBalance > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Balance on active booking: Ksh{" "}
+                {stats.activeBalance.toLocaleString()}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground mt-0.5">
               Lifetime payments
             </p>
           </CardContent>
         </Card>
 
+        {/* Active Booking */}
         <Card className="border-border/50 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex justify-between">
@@ -128,7 +152,24 @@ export default async function DashboardPage() {
                 <p className="text-xs text-muted-foreground truncate">
                   {activeBooking.project_name}
                 </p>
-                <Badge className={`mt-2 ${status.color}`}>{status.label}</Badge>
+                <Badge className={`mt-2 ${status.color}`}>
+                  <StatusIcon className="h-3 w-3 mr-1" />
+                  {status.label}
+                </Badge>
+                {/* Countdown timer for pending bookings */}
+                {activeBooking.status === "pending" && (
+                  <DepositCountdownTimer
+                    reservedAt={activeBooking.reserved_at}
+                    deadlineDays={2}
+                    className="mt-2"
+                  />
+                )}
+                {isDepositOverdue && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircleIcon className="h-3 w-3" />
+                    Deposit overdue – action required!
+                  </p>
+                )}
               </>
             ) : (
               <p className="text-muted-foreground">No active booking</p>
@@ -136,6 +177,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Next Payment */}
         <Card className="border-border/50 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex justify-between">
@@ -152,6 +194,16 @@ export default async function DashboardPage() {
                 <p className="text-xs text-muted-foreground">
                   Due {new Date(nextPayment.dueDate).toLocaleDateString()}
                 </p>
+                {nextPayment.label && (
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">
+                    {nextPayment.label}
+                  </p>
+                )}
+                {isDepositOverdue && (
+                  <p className="text-xs text-red-600 mt-1 font-medium">
+                    Deposit deadline passed – please contact support.
+                  </p>
+                )}
               </>
             ) : (
               <p className="text-muted-foreground">No pending payments</p>
@@ -172,7 +224,10 @@ export default async function DashboardPage() {
           <CardContent className="space-y-5">
             <div className="flex flex-wrap justify-between items-start gap-4">
               <div>
-                <Badge className={status.color}>{status.label}</Badge>
+                <Badge className={status.color}>
+                  <StatusIcon className="h-3 w-3 mr-1" />
+                  {status.label}
+                </Badge>
                 <h3 className="text-xl font-semibold mt-2">
                   {activeBooking.project_name}
                 </h3>
@@ -183,6 +238,20 @@ export default async function DashboardPage() {
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary" />{" "}
                   {activeBooking.location}
                 </p>
+                {/* Countdown timer in detailed card */}
+                {activeBooking.status === "pending" && (
+                  <DepositCountdownTimer
+                    reservedAt={activeBooking.reserved_at}
+                    deadlineDays={2}
+                    className="mt-2"
+                  />
+                )}
+                {isDepositOverdue && (
+                  <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                    <AlertCircleIcon className="h-4 w-4" />
+                    Deposit not paid within 2 days – booking may be cancelled.
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total Price</p>
@@ -206,8 +275,7 @@ export default async function DashboardPage() {
               </div>
               <Progress
                 value={paymentProgress}
-                className="h-2 bg-primary/20"
-                indicatorClassName="bg-primary"
+                className="h-2 bg-primary/20 [&>div]:bg-primary"
               />
               <p className="text-xs text-muted-foreground">
                 {paymentProgress.toFixed(1)}% completed •{" "}

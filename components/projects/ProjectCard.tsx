@@ -22,6 +22,7 @@ interface Project {
   status: string;
   coverImage: string | null;
   totalUnits: number;
+  availableUnits: number; // new
 }
 
 export function ProjectCard({ project }: { project: Project }) {
@@ -46,6 +47,8 @@ export function ProjectCard({ project }: { project: Project }) {
     statusConfig[project.status as keyof typeof statusConfig] ||
     statusConfig.upcoming;
 
+  const hasAvailableUnits = project.availableUnits > 0;
+
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card">
       <div className="relative h-52 w-full bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
@@ -67,6 +70,14 @@ export function ProjectCard({ project }: { project: Project }) {
         >
           {status.label}
         </Badge>
+        {!hasAvailableUnits && (
+          <Badge
+            variant="destructive"
+            className="absolute top-3 left-3 capitalize shadow-sm"
+          >
+            Sold Out
+          </Badge>
+        )}
       </div>
       <CardHeader className="pb-2">
         <CardTitle className="line-clamp-1 text-xl group-hover:text-primary transition-colors">
@@ -82,9 +93,14 @@ export function ProjectCard({ project }: { project: Project }) {
           {project.description}
         </p>
         <div className="flex items-center justify-between pt-1 border-t border-border/50">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Home className="h-4 w-4" />
-            <span>{project.totalUnits} units</span>
+          <div className="flex items-center gap-1 text-sm">
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">
+              {project.availableUnits}
+            </span>
+            <span className="text-muted-foreground">
+              / {project.totalUnits} units available
+            </span>
           </div>
           <div className="flex items-center gap-1 text-primary font-bold">
             <DollarSign className="h-4 w-4" />
@@ -95,11 +111,22 @@ export function ProjectCard({ project }: { project: Project }) {
       <CardFooter>
         <Link href={`/projects/${project.id}`} className="w-full">
           <Button
-            variant="outline"
-            className="w-full gap-1 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
+            variant={hasAvailableUnits ? "default" : "outline"}
+            disabled={!hasAvailableUnits}
+            className={`w-full gap-1 transition-all ${
+              hasAvailableUnits
+                ? "bg-primary hover:bg-primary/90"
+                : "opacity-60 cursor-not-allowed"
+            }`}
           >
-            View Details{" "}
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            {hasAvailableUnits ? (
+              <>
+                View Details{" "}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </>
+            ) : (
+              "Sold Out"
+            )}
           </Button>
         </Link>
       </CardFooter>
