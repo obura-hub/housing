@@ -1,0 +1,204 @@
+// ============================================================
+//  Tables for AffordableHseTest
+// ============================================================
+
+Table Amenity {
+  id int [pk, not null]
+  project_id int [not null]
+  amenity_name varchar(100) [not null]
+  sort_order int
+  created_at datetime
+}
+
+Table Application {
+  id int [pk, not null]
+  user_id varchar(450) [not null]
+  unit_id int [not null]
+  status varchar(20)
+  created_at datetime
+  updated_at datetime
+  reservation_id int
+}
+
+Table Block {
+  id int [pk, not null]
+  project_id int [not null]
+  name varchar(100) [not null]
+  description varchar(500)
+  sort_order int
+  created_at datetime
+  image_url text
+  model_3d_url text
+}
+
+Table Floor {
+  id int [pk, not null]
+  block_id int [not null]
+  floor_number int [not null]
+  layout_config text
+  sort_order int
+  rows int [not null]
+  cols int [not null]
+  floor_plan_image text
+}
+
+Table OtpSession {
+  Id bigint [pk, not null]
+  SessionToken varchar(100) [not null, unique]
+  UserId varchar(450) [not null]
+  OtpHash varchar(64) [not null]
+  ExpiresAt datetime [not null]
+  CreatedAt datetime [not null]
+  UsedAt datetime
+}
+
+Table Payment {
+  id int [pk, not null]
+  reservation_id int [not null]
+  amount decimal [not null]
+  payment_date datetime
+  reference varchar(100)
+  status varchar(50)
+  method varchar(50)
+}
+
+Table PaymentPlan {
+  id int [pk, not null]
+  project_id int [not null]
+  plan varchar(100) [not null]
+  discount varchar(100) [not null]
+  description varchar(500) [not null]
+  sort_order int
+  created_at datetime
+}
+
+Table PendingPayment {
+  id int [pk, not null]
+  reservation_id int [not null]
+  checkout_request_id varchar(100) [not null, unique]
+  merchant_request_id varchar(100)
+  amount decimal [not null]
+  phone_number varchar(15) [not null]
+  status varchar(20)
+  mpesa_receipt varchar(50)
+  error_message text
+  created_at datetime
+  completed_at datetime
+}
+
+Table Project {
+  id int [pk, not null]
+  name varchar(255) [not null]
+  location varchar(255) [not null]
+  description varchar(500) [not null]
+  created_at datetime
+  updated_at datetime
+  address varchar(500) [not null]
+  long_description varchar(2000)
+  status varchar(50) [not null]
+  completion_date varchar(50) [not null]
+  developer varchar(255) [not null]
+  contact_email varchar(255) [not null]
+  contact_phone varchar(50) [not null]
+}
+
+Table ProjectImage {
+  id int [pk, not null]
+  project_id int [not null]
+  image_url varchar(500) [not null]
+  display_order int
+  created_at datetime
+}
+
+Table PublicComment {
+  id int [pk, not null]
+  projectId int [not null]
+  authorName varchar(100) [not null]
+  authorEmail varchar(200)
+  content varchar(2000) [not null]
+  fileUrl varchar(500)
+  createdAt datetime
+  isApproved boolean
+}
+
+Table Reservation {
+  id int [pk, not null]
+  unit_id int [not null]
+  user_id varchar(450) [not null]
+  reserved_at datetime
+  expires_at datetime [not null]
+  status varchar(20)
+  total_price decimal
+  paid_amount decimal
+  payment_plan varchar(50)
+  monthly_installment decimal
+  next_payment_date date
+  project_id int
+  unit_type_id int
+}
+
+Table Unit {
+  id int [pk, not null]
+  floor_id int [not null]
+  unit_number varchar(20) [not null]
+  status varchar(20)
+  position_row int
+  position_col int
+  features text
+  price_adjustment decimal
+  created_at datetime
+  unit_type_id int [not null]
+  // Note: Unique constraint on (floor_id, unit_number)
+}
+
+Table UnitType {
+  id int [pk, not null]
+  project_id int [not null]
+  type varchar(100) [not null]
+  size varchar(50) [not null]
+  price varchar(50) [not null]
+  bedrooms int [not null]
+  bathrooms int [not null]
+  sort_order int
+  created_at datetime
+  image_url text
+  model_3d_url text
+}
+
+Table User {
+  UserId varchar(450) [pk, not null]
+  nationalId varchar(50) [unique]
+  personalNumber varchar(50) [unique]
+  dob date [not null]
+  phone varchar(20) [not null]
+  email varchar(256) [unique]
+  Password varchar(512)
+  Role varchar(50) [not null]
+  Status varchar(20) [not null]
+  CreatedAt datetime [not null]
+  UpdatedAt datetime [not null]
+  LastLoginAt datetime
+  fullName varchar(200)
+}
+
+// ============================================================
+//  Foreign Key References
+// ============================================================
+
+Ref: Amenity.project_id > Project.id
+Ref: Application.reservation_id > Reservation.id
+Ref: Application.user_id > User.UserId
+Ref: Block.project_id > Project.id
+Ref: Floor.block_id > Block.id
+Ref: OtpSession.UserId > User.UserId
+Ref: Payment.reservation_id > Reservation.id
+Ref: PaymentPlan.project_id > Project.id
+Ref: PendingPayment.reservation_id > Reservation.id
+Ref: ProjectImage.project_id > Project.id
+Ref: PublicComment.projectId > Project.id
+Ref: Reservation.user_id > User.UserId
+Ref: Reservation.project_id > Project.id
+Ref: Reservation.unit_type_id > UnitType.id
+Ref: Unit.floor_id > Floor.id
+Ref: Unit.unit_type_id > UnitType.id
+Ref: UnitType.project_id > Project.id
